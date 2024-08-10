@@ -44,16 +44,10 @@ jobs:
 
           echo "Resolving DNS name: $dns_name"
 
-          # 递归解析 CNAME 记录到 IP 地址
-          ip_address=$(dig +short "$dns_name")
-          echo "Initial IP address or CNAME record: $ip_address"
-
-          # 处理 CNAME 记录
-          while [[ "$ip_address" =~ ^[a-zA-Z0-9._-]+$ ]]; do
-            echo "CNAME record found: $ip_address. Resolving further..."
-            ip_address=$(dig +short "$ip_address")
-            echo "Resolved IP address: $ip_address"
-          done
+          # 只获取第一个非CNAME的IPv4地址
+          ip_address=$(dig +short "$dns_name" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          
+          echo "Resolved IP address: $ip_address"
 
           # 检查是否得到了 IP 地址
           if [ -n "$ip_address" ]; then
