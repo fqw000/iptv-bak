@@ -64,11 +64,11 @@ jobs:
 
       - name: Stage changes  # 步骤：暂存更改
         run: |
-        echo "Staging changes..."  # 输出正在暂存更改的信息
-        git config --global user.email "action@github.com"  # 配置全局用户邮箱
-        git config --global user.name "GitHub Action"  # 配置全局用户名
-        git add rule/gfw.list  # 将转换后的文件添加到 Git 的暂存区
-        git status  # 显示当前 Git 状态信息
+          echo "Staging changes..."  # 输出正在暂存更改的信息
+          git config --global user.email "action@github.com"  # 配置全局用户邮箱
+          git config --global user.name "GitHub Action"  # 配置全局用户名
+          git add rule/gfw.list  # 将转换后的文件添加到 Git 的暂存区
+          git status  # 显示当前 Git 状态信息
     - name: Commit changes  # 步骤：提交更改
       uses: stefanzweifel/git-auto-commit-action@v4  # 使用 stefanzweifel/git-auto-commit-action 动作自动提交更改
       with:
