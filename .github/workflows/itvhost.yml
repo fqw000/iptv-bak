@@ -15,6 +15,7 @@ jobs:
 
     - name: Update DNS records and hosts file
       run: |
+        set -x  # 启用调试模式
         # 定义 DNS 名称和对应的 host 文件内容
         DNS_NAMES=(
           'pixman.io.ystenlive.dnsany.com'
@@ -33,6 +34,7 @@ jobs:
         )
 
         # 清空之前的 iptvhost 文件
+        echo "Clearing previous iptvhost file..."
         > iptvhost
 
         # 解析 DNS 记录并更新 hosts 文件
@@ -40,18 +42,23 @@ jobs:
           dns_name="${DNS_NAMES[$i]}"
           host="${HOSTS_MAPPING[$i]}"
 
-          # 递归解析 CNAME 记录到 IP 地址
-          ip_address=$(dig +short "$dns_name" | head -n 1)
+          echo "Resolving DNS name: $dns_name"
 
+          # 递归解析 CNAME 记录到 IP 地址
+          ip_address=$(dig +short "$dns_name")
+          echo "Initial IP address or CNAME record: $ip_address"
+
+          # 处理 CNAME 记录
           while [[ "$ip_address" =~ ^[a-zA-Z0-9._-]+$ ]]; do
             echo "CNAME record found: $ip_address. Resolving further..."
-            ip_address=$(dig +short "$ip_address" | head -n 1)
+            ip_address=$(dig +short "$ip_address")
+            echo "Resolved IP address: $ip_address"
           done
 
           # 检查是否得到了 IP 地址
           if [ -n "$ip_address" ]; then
             echo "$ip_address $host" >> iptvhost
-            echo "$ip_address $host"
+            echo "Updated iptvhost file with: $ip_address $host"
           else
             echo "Failed to resolve $dns_name"
           fi
@@ -59,13 +66,15 @@ jobs:
 
     - name: Stage changes  # 步骤：暂存更改
       run: |
-        echo "Staging changes..."  # 输出正在暂存更改的信息
-        git config --global user.email "action@github.com"  # 配置全局用户邮箱
-        git config --global user.name "GitHub Action"  # 配置全局用户名
-        git add iptvhost  # 将转换后的文件添加到 Git 的暂存区
-        git status  # 显示当前 Git 状态信息
+        echo "Staging changes..."
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        git add iptvhost
+        git status
+        cat iptvhost  # 输出 iptvhost 文件内容以检查更新
+
     - name: Commit changes  # 步骤：提交更改
-      uses: stefanzweifel/git-auto-commit-action@v4  # 使用 stefanzweifel/git-auto-commit-action 动作自动提交更改
+      uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: Update iptvhost  # 提交消息为 Update iptvhost
-        branch: main  # 提交到 main 分支
+        commit_message: Update iptvhost
+        branch: main
