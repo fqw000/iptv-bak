@@ -1,4 +1,4 @@
-name: process gfw.list
+name: process iptvhost
 
 on:
   schedule:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Update DNS records and hosts file
       run: |
