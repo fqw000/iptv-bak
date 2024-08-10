@@ -39,8 +39,16 @@ jobs:
         for i in "${!DNS_NAMES[@]}"; do
           dns_name="${DNS_NAMES[$i]}"
           host="${HOSTS_MAPPING[$i]}"
-          ip_address=$(dig +short "$dns_name" | head -n 1) # 取第一个 IP 地址
 
+          # 递归解析 CNAME 记录到 IP 地址
+          ip_address=$(dig +short "$dns_name" | head -n 1)
+
+          while [[ "$ip_address" =~ ^[a-zA-Z0-9._-]+$ ]]; do
+            echo "CNAME record found: $ip_address. Resolving further..."
+            ip_address=$(dig +short "$ip_address" | head -n 1)
+          done
+
+          # 检查是否得到了 IP 地址
           if [ -n "$ip_address" ]; then
             echo "$ip_address $host" >> iptvhost
             echo "$ip_address $host"
@@ -59,5 +67,5 @@ jobs:
     - name: Commit changes  # 步骤：提交更改
       uses: stefanzweifel/git-auto-commit-action@v4  # 使用 stefanzweifel/git-auto-commit-action 动作自动提交更改
       with:
-        commit_message: Update iptvhost  # 提交消息为 Updateiptvhost
+        commit_message: Update iptvhost  # 提交消息为 Update iptvhost
         branch: main  # 提交到 main 分支
