@@ -1,0 +1,66 @@
+name: Update IPTV Host
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 每6小时运行一次
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  update_hosts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Update DNS records and hosts file
+        run: |
+          # 定义 DNS 名称和对应的 host 文件内容
+          DNS_NAMES=(
+            'pixman.io.ystenlive.dnsany.com'
+            'pixman.io.bestlive.dnsany.com'
+            'pixman.io.wasulive.dnsany.com'
+            'pixman.io.fifalive.dnsany.com'
+            'pixman.io.hnbblive.dnsany.com'
+          )
+
+          HOSTS_MAPPING=(
+            'cache.ott.ystenlive.itv.cmvideo.cn'
+            'cache.ott.bestlive.itv.cmvideo.cn'
+            'cache.ott.wasulive.itv.cmvideo.cn'
+            'cache.ott.fifalive.itv.cmvideo.cn'
+            'cache.ott.hnbblive.itv.cmvideo.cn'
+          )
+
+          # 清空之前的 iptvhost 文件
+          > iptvhost
+
+          # 解析 DNS 记录并更新 hosts 文件
+          for i in "${!DNS_NAMES[@]}"; do
+            dns_name="${DNS_NAMES[$i]}"
+            host="${HOSTS_MAPPING[$i]}"
+            ip_address=$(dig +short "$dns_name" | head -n 1) # 取第一个 IP 地址
+
+            if [ -n "$ip_address" ]; then
+              echo "$ip_address $host" >> iptvhost
+              echo "$ip_address $host"
+            else
+              echo "Failed to resolve $dns_name"
+            fi
+          done
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add iptvhost
+          git commit -m "Update iptvhost file with latest DNS records"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload updated iptvhost file
+        uses: actions/upload-artifact@v3
+        with:
+          name: iptvhost
+          path: iptvhost
