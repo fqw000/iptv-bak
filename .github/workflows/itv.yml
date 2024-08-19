@@ -16,52 +16,51 @@ jobs:
       - name: Download itv.m3u content
         run: curl -L -o itv.m3u https://s.wangqifei.eu.org/itv
 
+      - name: Add timestamp comment
+        run: |
+          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          # Create a new file with the timestamp comment at the beginning
+          echo "# Last updated: $timestamp" > itv_with_timestamp.m3u
+          # Append the contents of the original file
+          cat itv.m3u >> itv_with_timestamp.m3u
+
       - name: Process itv.m3u file
         run: |
-          input_file="itv.m3u"
+          input_file="itv_with_timestamp.m3u"
           output_file="processed_itv.m3u"
           fps_file="fps.m3u8"
           hevc_file="hevc.m3u8"
           other_file="other.m3u8"
 
-          echo "Input file: $input_file"
-          echo "Output file: $output_file"
-
-          # 清空临时文件和输出文件
+          # Clear temporary files and output file
           > "$output_file"
           > "$fps_file"
           > "$hevc_file"
           > "$other_file"
-          
-.         # 添加时间戳注释到输出文件
-          echo "# Updated on $(date '+%Y-%m-%d %H:%M:%S')" > "$output_file"
-          
-.         # 读取文件头并保留前两行
+
+          # Read and retain the first line (timestamp comment) and the next two lines
           head -n 3 "$input_file" > "$output_file"
 
-          # 从第三行开始逐行读取文件并处理
+          # Process the remaining lines starting from the fourth line
           tail -n +4 "$input_file" | while IFS= read -r line; do
               if echo "$line" | grep -q 'tvg-name="[^"]*FPS"'; then
-                  # 如果包含FPS，调整group-title属性并放入FPS文件
+                  # If it contains FPS, adjust group-title attribute and append to FPS file
                   line=$(echo "$line" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
                   echo "$line" >> "$fps_file"
               elif echo "$line" | grep -q 'tvg-name="[^"]*HEVC"'; then
-                  # 如果包含HEVC，调整group-title属性并放入HEVC文件
+                  # If it contains HEVC, adjust group-title attribute and append to HEVC file
                   line=$(echo "$line" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
                   echo "$line" >> "$hevc_file"
               else
-                  # 其他情况，直接写入到other文件
+                  # Other cases, write directly to other file
                   echo "$line" >> "$other_file"
               fi
           done
 
-          # 将分类后的文件合并到最终输出文件
+          # Merge the categorized files into the final output file
           cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
 
-          # 打印合并后的输出文件路径
-          echo "Processed file created: $output_file"
-
-          # 删除临时文件
+          # Remove temporary files
           rm "$fps_file" "$hevc_file" "$other_file"
 
       - name: Stage changes
@@ -69,11 +68,11 @@ jobs:
           echo "Staging changes..."
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          mv processed_itv.m3u itv.m3u  # 用处理后的文件替换原始文件
+          mv processed_itv.m3u itv.m3u  # Replace the original file with the processed file
           git add itv.m3u
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "Update itv.m3u"
-          branch: main  # 提交到main分支
+          commit_message: "Update itv.m3u with timestamp"
+          branch: main  # Commit to the main branch
