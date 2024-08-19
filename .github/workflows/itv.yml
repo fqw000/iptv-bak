@@ -1,4 +1,3 @@
-
 name: Update ITV M3U
 
 on:
@@ -37,48 +36,49 @@ jobs:
           > "$hevc_file"
           > "$other_file"
 
-          # Initialize variables
-          entry=""
-          processing_entry=false
-
-          while IFS= read -r line; do
-              if [[ "$line" =~ ^#EXTINF ]]; then
-                  # Write the previous entry to the appropriate file
-                  if $processing_entry; then
-                      # Determine which file to write the previous entry to
-                      if echo "$entry" | grep -q 'tvg-name="[^"]*FPS"'; then
-                          entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
-                          echo "$entry" >> "$fps_file"
-                      elif echo "$entry" | grep -q 'tvg-name="[^"]*HEVC"'; then
-                          entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
-                          echo "$entry" >> "$hevc_file"
-                      else
-                          echo "$entry" >> "$other_file"
-                      fi
-                  fi
-                  # Start a new entry
-                  entry="$line"
-                  processing_entry=true
-              else
-                  # Continue the current entry
-                  if $processing_entry; then
-                      entry="$entry"$'\n'"$line"
-                  fi
-              fi
-          done < "$input_file"
-
-          # Write the last entry
-          if $processing_entry; then
-              if echo "$entry" | grep -q 'tvg-name="[^"]*FPS"'; then
-                  entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
-                  echo "$entry" >> "$fps_file"
-              elif echo "$entry" | grep -q 'tvg-name="[^"]*HEVC"'; then
-                  entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
-                  echo "$entry" >> "$hevc_file"
-              else
-                  echo "$entry" >> "$other_file"
-              fi
-          fi
+          # Process and categorize entries using awk
+          awk -F'[ ,]' '
+            BEGIN {
+              # Initialize variables
+              entry = ""
+            }
+            /^#EXTINF/ {
+              # Write the previous entry to the appropriate file
+              if (entry) {
+                if (entry ~ /tvg-name="[^"]*FPS"/) {
+                  gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
+                  print entry >> ENVIRON["fps_file"]
+                } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
+                  gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
+                  print entry >> ENVIRON["hevc_file"]
+                } else {
+                  print entry >> ENVIRON["other_file"]
+                }
+              }
+              # Start a new entry
+              entry = $0
+            }
+            {
+              # Continue the current entry
+              if (entry) {
+                entry = entry "\n" $0
+              }
+            }
+            END {
+              # Write the last entry
+              if (entry) {
+                if (entry ~ /tvg-name="[^"]*FPS"/) {
+                  gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
+                  print entry >> ENVIRON["fps_file"]
+                } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
+                  gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
+                  print entry >> ENVIRON["hevc_file"]
+                } else {
+                  print entry >> ENVIRON["other_file"]
+                }
+              }
+            }
+          ' "$input_file"
 
           # Merge the categorized files into the final output file
           cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
