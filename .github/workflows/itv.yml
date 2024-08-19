@@ -1,9 +1,10 @@
+
 name: Update ITV M3U
 
 on:
   schedule:
-    - cron: "0 */24 * * *" # 每小时运行一次
-  workflow_dispatch: # 允许手动触发
+    - cron: '0 * * * *'  # 每小时运行一次
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   update_itv_m3u:
@@ -16,10 +17,15 @@ jobs:
       - name: Download itv.m3u content
         run: curl -L -o itv.m3u https://s.wangqifei.eu.org/itv
 
-      - name: Process itv.m3u
+      - name: Add timestamp comment
         run: |
-          # Define input and output files
-          input_file="itv.m3u"
+          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "# Last updated: $timestamp" > itv_with_timestamp.m3u
+          cat itv.m3u >> itv_with_timestamp.m3u
+
+      - name: Process itv.m3u file
+        run: |
+          input_file="itv_with_timestamp.m3u"
           output_file="processed_itv.m3u"
           fps_file="fps.m3u8"
           hevc_file="hevc.m3u8"
@@ -27,24 +33,58 @@ jobs:
 
           # Clear temporary files and output file
           > "$output_file"
+          > "$fps_file"
+          > "$hevc_file"
+          > "$other_file"
 
-          # Get the current timestamp
-          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          {
-            echo "# Last updated: $timestamp"
-            echo "#EXTM3U"
-            echo '#EXTM3U x-tvg-url="https://assets.livednow.com/epg.xml"'
-            echo ""
-          } > "$output_file"
+          # Initialize variables
+          entry=""
+          processing_entry=false
 
-          # Process HEVC entries
-          awk -F'[ ,]' '/HEVC/ {print $0; getline; print $0; print ""}' "$input_file" >> "$output_file"
+          while IFS= read -r line; do
+              if [[ "$line" =~ ^#EXTINF ]]; then
+                  # Write the previous entry to the appropriate file
+                  if $processing_entry; then
+                      # Determine which file to write the previous entry to
+                      if echo "$entry" | grep -q 'tvg-name="[^"]*FPS"'; then
+                          entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
+                          echo "$entry" >> "$fps_file"
+                      elif echo "$entry" | grep -q 'tvg-name="[^"]*HEVC"'; then
+                          entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
+                          echo "$entry" >> "$hevc_file"
+                      else
+                          echo "$entry" >> "$other_file"
+                      fi
+                  fi
+                  # Start a new entry
+                  entry="$line"
+                  processing_entry=true
+              else
+                  # Continue the current entry
+                  if $processing_entry; then
+                      entry="$entry"$'\n'"$line"
+                  fi
+              fi
+          done < "$input_file"
 
-          # Process FPS entries
-          awk -F'[ ,]' '/50 FPS/ {print $0; getline; print $0; print ""}' "$input_file" >> "$output_file"
+          # Write the last entry
+          if $processing_entry; then
+              if echo "$entry" | grep -q 'tvg-name="[^"]*FPS"'; then
+                  entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
+                  echo "$entry" >> "$fps_file"
+              elif echo "$entry" | grep -q 'tvg-name="[^"]*HEVC"'; then
+                  entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
+                  echo "$entry" >> "$hevc_file"
+              else
+                  echo "$entry" >> "$other_file"
+              fi
+          fi
 
-          # Process regular entries (excluding HEVC and FPS)
-          awk -F'[ ,]' '!/HEVC|50 FPS/ {print $0; print ""; getline; print $0}' "$input_file" >> "$output_file"
+          # Merge the categorized files into the final output file
+          cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
+
+          # Remove temporary files
+          rm "$fps_file" "$hevc_file" "$other_file"
 
       - name: Stage changes
         run: |
@@ -58,4 +98,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Update itv.m3u with timestamp"
-          branch: main # Commit to the main branch
+          branch: main  # Commit to the main branch
