@@ -1,0 +1,30 @@
+name: Update ITV M3U
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 每小时运行一次
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  update_itv_m3u:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download itv.m3u content
+        run: curl -o itv.m3u https://s.wangqifei.eu.org/itv
+
+      - name: Stage changes
+        run: |
+          echo "Staging changes..."
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add itv.m3u
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update itv.m3u"
+          branch: main # 提交到sec分支
