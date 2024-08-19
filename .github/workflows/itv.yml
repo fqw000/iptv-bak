@@ -45,6 +45,9 @@ jobs:
           entry=""
           processing_entry=false
 
+          # Write timestamp and header to output file
+          head -n 3 "$input_file" > "$output_file"
+
           # Process the file starting from the fourth line
           awk 'NR >= 4' "$input_file" | while IFS= read -r line; do
               if [[ "$line" =~ ^#EXTINF ]]; then
@@ -86,10 +89,10 @@ jobs:
           fi
 
           # Merge the categorized files into the final output file
-          cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
+          cat "$fps_file" "$hevc_file" "$other_file" >> "$output_file"
 
           # Remove temporary files
-          rm "$fps_file" "$hevc_file" "$other_file" header.txt
+          rm "$fps_file" "$hevc_file" "$other_file" header.txt itv_with_timestamp.m3u
 
       - name: Stage changes
         run: |
