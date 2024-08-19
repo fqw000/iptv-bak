@@ -32,12 +32,15 @@ jobs:
           > "$fps_file"
           > "$hevc_file"
           > "$other_file"
-
-          # 读取文件头并保留前两行
-          head -n 2 "$input_file" > "$output_file"
+          
+.         # 添加时间戳注释到输出文件
+          echo "# Updated on $(date '+%Y-%m-%d %H:%M:%S')" > "$output_file"
+          
+.         # 读取文件头并保留前两行
+          head -n 3 "$input_file" > "$output_file"
 
           # 从第三行开始逐行读取文件并处理
-          tail -n +3 "$input_file" | while IFS= read -r line; do
+          tail -n +4 "$input_file" | while IFS= read -r line; do
               if echo "$line" | grep -q 'tvg-name="[^"]*FPS"'; then
                   # 如果包含FPS，调整group-title属性并放入FPS文件
                   line=$(echo "$line" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
