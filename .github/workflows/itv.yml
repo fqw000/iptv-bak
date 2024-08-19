@@ -16,15 +16,55 @@ jobs:
       - name: Download itv.m3u content
         run: curl -L -o itv.m3u https://s.wangqifei.eu.org/itv
 
+      - name: Process itv.m3u file
+        run: |
+          input_file="itv.m3u"
+          output_file="processed_itv.m3u"
+          fps_file="fps.m3u8"
+          hevc_file="hevc.m3u8"
+          other_file="other.m3u8"
+
+          # 清空临时文件和输出文件
+          > "$output_file"
+          > "$fps_file"
+          > "$hevc_file"
+          > "$other_file"
+
+          # 读取文件头并保留前两行
+          head -n 2 "$input_file" > "$output_file"
+
+          # 从第三行开始逐行读取文件并处理
+          tail -n +3 "$input_file" | while IFS= read -r line; do
+              if echo "$line" | grep -q 'tvg-name="[^"]*FPS"'; then
+                  # 如果包含FPS，调整group-title属性并放入FPS文件
+                  line=$(echo "$line" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
+                  echo "$line" >> "$fps_file"
+              elif echo "$line" | grep -q 'tvg-name="[^"]*HEVC"'; then
+                  # 如果包含HEVC，调整group-title属性并放入HEVC文件
+                  line=$(echo "$line" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
+                  echo "$line" >> "$hevc_file"
+              else
+                  # 其他情况，直接写入到other文件
+                  echo "$line" >> "$other_file"
+              fi
+          done
+
+          # 将分类后的文件合并到最终输出文件
+          cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
+
+          # 删除临时文件
+          rm "$fps_file" "$hevc_file" "$other_file"
+
       - name: Stage changes
         run: |
           echo "Staging changes..."
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
+          mv "$output_file" itv.m3u  # 用处理后的文件替换原始文件
           git add itv.m3u
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Update itv.m3u"
-          branch: main # 提交到sec分支
+          branch: main  # 提交到main分支
