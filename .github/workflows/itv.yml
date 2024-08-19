@@ -100,6 +100,114 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           mv processed_itv.m3u itv.m3u  # Replace the original file with the processed file
+          git add itv.m3u itv_with_timestamp.m3u
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update itv.m3u with timestamp"
+          branch: main  # Commit to the main brancname: Update ITV M3U
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 每小时运行一次
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  update_itv_m3u:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download itv.m3u content
+        run: curl -L -o itv.m3u https://s.wangqifei.eu.org/itv
+
+      - name: Add timestamp comment
+        run: |
+          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          # Extract the first two lines as the header
+          head -n 2 itv.m3u > header.txt
+          # Add timestamp comment at the beginning
+          echo "# Last updated: $timestamp" > itv_with_timestamp.m3u
+          # Append the original file content after the timestamp comment
+          cat header.txt >> itv_with_timestamp.m3u
+          tail -n +3 itv.m3u >> itv_with_timestamp.m3u
+
+      - name: Process itv_with_timestamp.m3u file
+        run: |
+          input_file="itv_with_timestamp.m3u"
+          output_file="processed_itv.m3u"
+          fps_file="fps.m3u8"
+          hevc_file="hevc.m3u8"
+          other_file="other.m3u8"
+
+          # Clear temporary files and output file
+          > "$output_file"
+          > "$fps_file"
+          > "$hevc_file"
+          > "$other_file"
+
+          # Initialize variables
+          entry=""
+          processing_entry=false
+
+          # Write timestamp and header to output file
+          head -n 3 "$input_file" > "$output_file"
+
+          # Process the file starting from the fourth line
+          awk 'NR >= 4' "$input_file" | while IFS= read -r line; do
+              if [[ "$line" =~ ^#EXTINF ]]; then
+                  # Write the previous entry to the appropriate file
+                  if $processing_entry; then
+                      # Determine which file to write the previous entry to
+                      if echo "$entry" | grep -q 'tvg-name="[^"]*FPS"'; then
+                          entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
+                          echo "$entry" >> "$fps_file"
+                      elif echo "$entry" | grep -q 'tvg-name="[^"]*HEVC"'; then
+                          entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
+                          echo "$entry" >> "$hevc_file"
+                      else
+                          echo "$entry" >> "$other_file"
+                      fi
+                  fi
+                  # Start a new entry
+                  entry="$line"
+                  processing_entry=true
+              else
+                  # Continue the current entry
+                  if $processing_entry; then
+                      entry="$entry"$'\n'"$line"
+                  fi
+              fi
+          done
+
+          # Write the last entry
+          if $processing_entry; then
+              if echo "$entry" | grep -q 'tvg-name="[^"]*FPS"'; then
+                  entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
+                  echo "$entry" >> "$fps_file"
+              elif echo "$entry" | grep -q 'tvg-name="[^"]*HEVC"'; then
+                  entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
+                  echo "$entry" >> "$hevc_file"
+              else
+                  echo "$entry" >> "$other_file"
+              fi
+          fi
+
+          # Merge the categorized files into the final output file
+          cat "$fps_file" "$hevc_file" "$other_file" >> "$output_file"
+
+          # Remove temporary files
+          rm "$fps_file" "$hevc_file" "$other_file" header.txt
+
+      - name: Stage changes
+        run: |
+          echo "Staging changes..."
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          mv processed_itv.m3u itv.m3u  # Replace the original file with the processed file
           git add itv.m3u
 
       - name: Commit changes
