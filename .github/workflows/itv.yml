@@ -19,8 +19,13 @@ jobs:
       - name: Add timestamp comment
         run: |
           timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          echo "# Last updated: $timestamp" > itv_with_timestamp.m3u
-          cat itv.m3u >> itv_with_timestamp.m3u
+          {
+            echo "# Last updated: $timestamp"
+            echo "#EXTM3U"
+            echo '#EXTM3U x-tvg-url="https://assets.livednow.com/epg.xml"'
+            echo ""
+            cat itv.m3u
+          } > itv_with_timestamp.m3u
 
       - name: Process itv.m3u file
         run: |
@@ -37,7 +42,7 @@ jobs:
           > "$other_file"
 
           # Process and categorize entries using awk
-          awk -F'[ ,]' -v fps_file="$fps_file" -v hevc_file="$hevc_file" -v other_file="$other_file" '
+          awk '
             BEGIN {
               # Initialize variables
               entry = ""
@@ -47,18 +52,18 @@ jobs:
               if (entry) {
                 if (entry ~ /tvg-name="[^"]*FPS"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
-                  print entry >> fps_file
+                  print entry >> ENVIRON["fps_file"]
                 } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
-                  print entry >> hevc_file
+                  print entry >> ENVIRON["hevc_file"]
                 } else {
-                  print entry >> other_file
+                  print entry >> ENVIRON["other_file"]
                 }
               }
               # Start a new entry
               entry = $0
             }
-            {
+            /^[^#]/ {
               # Continue the current entry
               if (entry) {
                 entry = entry "\n" $0
@@ -69,19 +74,23 @@ jobs:
               if (entry) {
                 if (entry ~ /tvg-name="[^"]*FPS"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
-                  print entry >> fps_file
+                  print entry >> ENVIRON["fps_file"]
                 } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
-                  print entry >> hevc_file
+                  print entry >> ENVIRON["hevc_file"]
                 } else {
-                  print entry >> other_file
+                  print entry >> ENVIRON["other_file"]
                 }
               }
             }
           ' "$input_file"
 
           # Merge the categorized files into the final output file
-          cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
+          {
+            cat "$hevc_file"
+            cat "$fps_file"
+            cat "$other_file"
+          } >> "$output_file"
 
           # Remove temporary files
           rm "$fps_file" "$hevc_file" "$other_file"
