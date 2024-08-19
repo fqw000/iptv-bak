@@ -19,9 +19,7 @@ jobs:
       - name: Add timestamp comment
         run: |
           timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          # Create a new file with the timestamp comment at the beginning
           echo "# Last updated: $timestamp" > itv_with_timestamp.m3u
-          # Append the contents of the original file
           cat itv.m3u >> itv_with_timestamp.m3u
 
       - name: Process itv.m3u file
@@ -38,24 +36,48 @@ jobs:
           > "$hevc_file"
           > "$other_file"
 
-          # Read and retain the first line (timestamp comment) and the next two lines
-          head -n 3 "$input_file" > "$output_file"
+          # Initialize variables
+          entry=""
+          processing_entry=false
 
-          # Process the remaining lines starting from the fourth line
-          tail -n +4 "$input_file" | while IFS= read -r line; do
-              if echo "$line" | grep -q 'tvg-name="[^"]*FPS"'; then
-                  # If it contains FPS, adjust group-title attribute and append to FPS file
-                  line=$(echo "$line" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
-                  echo "$line" >> "$fps_file"
-              elif echo "$line" | grep -q 'tvg-name="[^"]*HEVC"'; then
-                  # If it contains HEVC, adjust group-title attribute and append to HEVC file
-                  line=$(echo "$line" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
-                  echo "$line" >> "$hevc_file"
+          while IFS= read -r line; do
+              if [[ "$line" =~ ^#EXTINF ]]; then
+                  # Write the previous entry to the appropriate file
+                  if $processing_entry; then
+                      # Determine which file to write the previous entry to
+                      if echo "$entry" | grep -q 'tvg-name="[^"]*FPS"'; then
+                          entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
+                          echo "$entry" >> "$fps_file"
+                      elif echo "$entry" | grep -q 'tvg-name="[^"]*HEVC"'; then
+                          entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
+                          echo "$entry" >> "$hevc_file"
+                      else
+                          echo "$entry" >> "$other_file"
+                      fi
+                  fi
+                  # Start a new entry
+                  entry="$line"
+                  processing_entry=true
               else
-                  # Other cases, write directly to other file
-                  echo "$line" >> "$other_file"
+                  # Continue the current entry
+                  if $processing_entry; then
+                      entry="$entry"$'\n'"$line"
+                  fi
               fi
-          done
+          done < "$input_file"
+
+          # Write the last entry
+          if $processing_entry; then
+              if echo "$entry" | grep -q 'tvg-name="[^"]*FPS"'; then
+                  entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1FPS"/')
+                  echo "$entry" >> "$fps_file"
+              elif echo "$entry" | grep -q 'tvg-name="[^"]*HEVC"'; then
+                  entry=$(echo "$entry" | sed -E 's/(group-title="[^"]*)"/\1HEVC"/')
+                  echo "$entry" >> "$hevc_file"
+              else
+                  echo "$entry" >> "$other_file"
+              fi
+          fi
 
           # Merge the categorized files into the final output file
           cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
