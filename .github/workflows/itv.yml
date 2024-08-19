@@ -20,6 +20,7 @@ jobs:
         run: |
           timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           echo "# Last updated: $timestamp" > itv_with_timestamp.m3u
+          # Append the contents of the original file
           cat itv.m3u >> itv_with_timestamp.m3u
 
       - name: Process itv.m3u file
@@ -39,9 +40,14 @@ jobs:
           # Initialize variables
           entry=""
           processing_entry=false
+          timestamp_header=false
 
           while IFS= read -r line; do
-              if [[ "$line" =~ ^#EXTINF ]]; then
+              if [[ "$line" =~ ^#Last\ updated ]]; then
+                  # Keep the timestamp line as header
+                  echo "$line" > "$output_file"
+                  timestamp_header=true
+              elif [[ "$line" =~ ^#EXTINF ]]; then
                   # Write the previous entry to the appropriate file
                   if $processing_entry; then
                       # Determine which file to write the previous entry to
@@ -79,8 +85,14 @@ jobs:
               fi
           fi
 
-          # Merge the categorized files into the final output file
-          cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
+          # If the timestamp header was added, make sure to include it at the beginning of the output file
+          if $timestamp_header; then
+              # Merge the categorized files into the final output file
+              cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
+          else
+              echo "Timestamp header not found!"
+              exit 1
+          fi
 
           # Remove temporary files
           rm "$fps_file" "$hevc_file" "$other_file"
