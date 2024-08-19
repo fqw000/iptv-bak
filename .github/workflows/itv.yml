@@ -2,7 +2,7 @@ name: Update ITV M3U
 
 on:
   schedule:
-    - cron: '0 */12 * * *'  # 每12小时运行一次
+    - cron: '0 * * * *'  # 每小时运行一次
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
           cat header.txt >> itv_with_timestamp.m3u
           tail -n +3 itv.m3u >> itv_with_timestamp.m3u
 
-      - name: Process itv.m3u file
+      - name: Process itv_with_timestamp.m3u file
         run: |
           input_file="itv_with_timestamp.m3u"
           output_file="processed_itv.m3u"
@@ -45,7 +45,8 @@ jobs:
           entry=""
           processing_entry=false
 
-          while IFS= read -r line; do
+          # Process the file starting from the fourth line
+          awk 'NR >= 4' "$input_file" | while IFS= read -r line; do
               if [[ "$line" =~ ^#EXTINF ]]; then
                   # Write the previous entry to the appropriate file
                   if $processing_entry; then
@@ -69,7 +70,7 @@ jobs:
                       entry="$entry"$'\n'"$line"
                   fi
               fi
-          done < "$input_file"
+          done
 
           # Write the last entry
           if $processing_entry; then
@@ -89,7 +90,6 @@ jobs:
 
           # Remove temporary files
           rm "$fps_file" "$hevc_file" "$other_file" header.txt
-          rm itv_with_timestamp.m3u
 
       - name: Stage changes
         run: |
