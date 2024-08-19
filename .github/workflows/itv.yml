@@ -2,7 +2,7 @@ name: Update ITV M3U
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 每小时运行一次
+    - cron: '0 */12 * * *'  # 每12小时运行一次
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -19,9 +19,13 @@ jobs:
       - name: Add timestamp comment
         run: |
           timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          # Extract the first two lines as the header
+          head -n 2 itv.m3u > header.txt
+          # Add timestamp comment at the beginning
           echo "# Last updated: $timestamp" > itv_with_timestamp.m3u
-          # Append the contents of the original file
-          cat itv.m3u >> itv_with_timestamp.m3u
+          # Append the original file content after the timestamp comment
+          cat header.txt >> itv_with_timestamp.m3u
+          tail -n +3 itv.m3u >> itv_with_timestamp.m3u
 
       - name: Process itv.m3u file
         run: |
@@ -40,14 +44,9 @@ jobs:
           # Initialize variables
           entry=""
           processing_entry=false
-          timestamp_header=false
 
           while IFS= read -r line; do
-              if [[ "$line" =~ ^#Last\ updated ]]; then
-                  # Keep the timestamp line as header
-                  echo "$line" > "$output_file"
-                  timestamp_header=true
-              elif [[ "$line" =~ ^#EXTINF ]]; then
+              if [[ "$line" =~ ^#EXTINF ]]; then
                   # Write the previous entry to the appropriate file
                   if $processing_entry; then
                       # Determine which file to write the previous entry to
@@ -85,17 +84,12 @@ jobs:
               fi
           fi
 
-          # If the timestamp header was added, make sure to include it at the beginning of the output file
-          if $timestamp_header; then
-              # Merge the categorized files into the final output file
-              cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
-          else
-              echo "Timestamp header not found!"
-              exit 1
-          fi
+          # Merge the categorized files into the final output file
+          cat "$hevc_file" "$fps_file" "$other_file" >> "$output_file"
 
           # Remove temporary files
-          rm "$fps_file" "$hevc_file" "$other_file"
+          rm "$fps_file" "$hevc_file" "$other_file" header.txt
+          rm itv_with_timestamp.m3u
 
       - name: Stage changes
         run: |
