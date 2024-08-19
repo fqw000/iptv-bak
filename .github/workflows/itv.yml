@@ -37,7 +37,7 @@ jobs:
           > "$other_file"
 
           # Process and categorize entries using awk
-          awk -F'[ ,]' '
+          awk -F'[ ,]' -v fps_file="$fps_file" -v hevc_file="$hevc_file" -v other_file="$other_file" '
             BEGIN {
               # Initialize variables
               entry = ""
@@ -47,12 +47,12 @@ jobs:
               if (entry) {
                 if (entry ~ /tvg-name="[^"]*FPS"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
-                  print entry >> ENVIRON["fps_file"]
+                  print entry >> fps_file
                 } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
-                  print entry >> ENVIRON["hevc_file"]
+                  print entry >> hevc_file
                 } else {
-                  print entry >> ENVIRON["other_file"]
+                  print entry >> other_file
                 }
               }
               # Start a new entry
@@ -69,12 +69,12 @@ jobs:
               if (entry) {
                 if (entry ~ /tvg-name="[^"]*FPS"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
-                  print entry >> ENVIRON["fps_file"]
+                  print entry >> fps_file
                 } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
-                  print entry >> ENVIRON["hevc_file"]
+                  print entry >> hevc_file
                 } else {
-                  print entry >> ENVIRON["other_file"]
+                  print entry >> other_file
                 }
               }
             }
