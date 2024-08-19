@@ -2,7 +2,7 @@ name: Update ITV M3U
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 每小时运行一次
+    - cron: '0 */12 * * *'  # 每小时运行一次
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -46,26 +46,31 @@ jobs:
             BEGIN {
               # Initialize variables
               entry = ""
+              entry_started = 0
             }
             /^#EXTINF/ {
-              # Write the previous entry to the appropriate file
-              if (entry) {
-                if (entry ~ /tvg-name="[^"]*FPS"/) {
-                  gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
-                  print entry >> ENVIRON["fps_file"]
-                } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
-                  gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
-                  print entry >> ENVIRON["hevc_file"]
-                } else {
-                  print entry >> ENVIRON["other_file"]
+              # Write the previous entry to the appropriate file if it exists
+              if (entry_started) {
+                if (entry) {
+                  if (entry ~ /tvg-name="[^"]*FPS"/) {
+                    gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
+                    print entry >> ENVIRON["fps_file"]
+                  } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
+                    gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
+                    print entry >> ENVIRON["hevc_file"]
+                  } else {
+                    print entry >> ENVIRON["other_file"]
+                  }
+                  entry = ""
                 }
               }
               # Start a new entry
               entry = $0
+              entry_started = 1
             }
             /^[^#]/ {
               # Continue the current entry
-              if (entry) {
+              if (entry_started) {
                 entry = entry "\n" $0
               }
             }
