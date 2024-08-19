@@ -2,7 +2,7 @@ name: Update ITV M3U
 
 on:
   schedule:
-    - cron: '0 */12 * * *'  # 每小时运行一次
+    - cron: '0 * * * *'  # 每小时运行一次
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
           > "$other_file"
 
           # Process and categorize entries using awk
-          awk '
+          awk -v fps_file="$fps_file" -v hevc_file="$hevc_file" -v other_file="$other_file" '
             BEGIN {
               # Initialize variables
               entry = ""
@@ -51,15 +51,15 @@ jobs:
             /^#EXTINF/ {
               # Write the previous entry to the appropriate file if it exists
               if (entry_started) {
-                if (entry) {
+                if (entry != "") {
                   if (entry ~ /tvg-name="[^"]*FPS"/) {
                     gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
-                    print entry >> ENVIRON["fps_file"]
+                    print entry >> fps_file
                   } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
                     gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
-                    print entry >> ENVIRON["hevc_file"]
+                    print entry >> hevc_file
                   } else {
-                    print entry >> ENVIRON["other_file"]
+                    print entry >> other_file
                   }
                   entry = ""
                 }
@@ -76,15 +76,15 @@ jobs:
             }
             END {
               # Write the last entry
-              if (entry) {
+              if (entry != "") {
                 if (entry ~ /tvg-name="[^"]*FPS"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
-                  print entry >> ENVIRON["fps_file"]
+                  print entry >> fps_file
                 } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
                   gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
-                  print entry >> ENVIRON["hevc_file"]
+                  print entry >> hevc_file
                 } else {
-                  print entry >> ENVIRON["other_file"]
+                  print entry >> other_file
                 }
               }
             }
