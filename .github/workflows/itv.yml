@@ -48,7 +48,7 @@ jobs:
           cat "$temp_file" >> "$output_file"
 
           # Remove temporary files
-          rm "$tmp_file"
+          rm "$temp_file"
 
       - name: Stage changes
         run: |
