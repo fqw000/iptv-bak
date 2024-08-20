@@ -2,7 +2,7 @@ name: Update ITV M3U
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 每小时运行一次
+    - cron: '0 */12 * * *'  # 每12小时运行一次
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -16,89 +16,39 @@ jobs:
       - name: Download itv.m3u content
         run: curl -L -o itv.m3u https://s.wangqifei.eu.org/itv
 
-      - name: Add timestamp comment
-        run: |
-          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          {
-            echo "# Last updated: $timestamp"
-            echo "#EXTM3U"
-            echo '#EXTM3U x-tvg-url="https://assets.livednow.com/epg.xml"'
-            echo ""
-            cat itv.m3u
-          } > itv_with_timestamp.m3u
-
       - name: Process itv.m3u file
         run: |
-          input_file="itv_with_timestamp.m3u"
+          input_file="itv.m3u"
           output_file="processed_itv.m3u"
-          fps_file="fps.m3u8"
-          hevc_file="hevc.m3u8"
-          other_file="other.m3u8"
+          tmp_file="tmp_file.m3u8"
 
-          # Clear temporary files and output file
-          > "$output_file"
-          > "$fps_file"
-          > "$hevc_file"
-          > "$other_file"
+          # 1. 使用 cat 命令去除空行写入临时文件
+          cat "$input_file" | sed '/^\s*$/d' > "$temp_file"
 
-          # Process and categorize entries using awk
-          awk -v fps_file="$fps_file" -v hevc_file="$hevc_file" -v other_file="$other_file" '
-            BEGIN {
-              # Initialize variables
-              entry = ""
-              entry_started = 0
-            }
-            /^#EXTINF/ {
-              # Write the previous entry to the appropriate file if it exists
-              if (entry_started) {
-                if (entry != "") {
-                  if (entry ~ /tvg-name="[^"]*FPS"/) {
-                    gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
-                    print entry >> fps_file
-                  } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
-                    gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
-                    print entry >> hevc_file
-                  } else {
-                    print entry >> other_file
-                  }
-                  entry = ""
-                }
-              }
-              # Start a new entry
-              entry = $0
-              entry_started = 1
-            }
-            /^[^#]/ {
-              # Continue the current entry
-              if (entry_started) {
-                entry = entry "\n" $0
-              }
-            }
-            END {
-              # Write the last entry
-              if (entry != "") {
-                if (entry ~ /tvg-name="[^"]*FPS"/) {
-                  gsub(/(group-title="[^"]*)"/, "\\1FPS\"", entry)
-                  print entry >> fps_file
-                } else if (entry ~ /tvg-name="[^"]*HEVC"/) {
-                  gsub(/(group-title="[^"]*)"/, "\\1HEVC\"", entry)
-                  print entry >> hevc_file
-                } else {
-                  print entry >> other_file
-                }
-              }
-            }
-          ' "$input_file"
+          # 2. 将时间戳覆盖到 output 文件
+          echo "# $(date)" > "$output_file"
 
-          # Merge the categorized files into the final output file
-          {
-            cat "$hevc_file"
-            cat "$fps_file"
-            cat "$other_file"
-          } >> "$output_file"
+          # 3. 使用 awk 将包含 EXTM3U 的行追加到 output 文件，并在临时文件中删除
+          awk '/EXTM3U/ {print $0; next} 1' "$temp_file" > "$temp_file.tmp" && mv "$temp_file.tmp" "$temp_file"
+          awk '/EXTM3U/ {print $0;}' "$temp_file" >> "$output_file"
+          echo "" >> "$output_file"
+          sed -i '/EXTM3U/d' "$temp_file"
+
+          # 4. 使用 awk 将包含 HEVC 的行及其下一行追加到 output 文件，并在临时文件中删除
+          awk '/HEVC/ {print $0; getline; print $0; next} 1' "$temp_file" > "$temp_file.tmp" && mv "$temp_file.tmp" "$temp_file"
+          awk '/HEVC/ {print $0; getline; print ""; print $0}' "$temp_file" >> "$output_file"
+          sed -i '/HEVC/,+1d' "$temp_file"
+
+          # 5. 使用 awk 将包含 FPS 的行及其下一行追加到 output 文件，并在临时文件中删除
+          awk '/FPS/ {print $0; getline; print $0; next} 1' "$temp_file" > "$temp_file.tmp" && mv "$temp_file.tmp" "$temp_file"
+          awk '/FPS/ {print $0; getline; print ""; print $0}' "$temp_file" >> "$output_file"
+          sed -i '/FPS/,+1d' "$temp_file"
+
+          # 6. 将临时文件中剩余的内容追加到 output 文件
+          cat "$temp_file" >> "$output_file"
 
           # Remove temporary files
-          rm "$fps_file" "$hevc_file" "$other_file"
+          rm "$tmp_file"
 
       - name: Stage changes
         run: |
