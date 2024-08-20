@@ -20,7 +20,7 @@ jobs:
         run: |
           input_file="itv.m3u"
           output_file="processed_itv.m3u"
-          tmp_file="tmp_file.m3u8"
+          temp_file="tmp_file.m3u8"
 
           # 1. 使用 cat 命令去除空行写入临时文件
           cat "$input_file" | sed '/^\s*$/d' > "$temp_file"
