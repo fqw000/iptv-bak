@@ -48,6 +48,9 @@ jobs:
           # 6. 将临时文件中剩余的内容追加到 output 文件
           cat "$temp_file" >> "$output_file"
 
+          # 多个空格转为1个空格
+          sed 's/ \+/ /g' "$output_file" | sed -n l 
+
           # Remove temporary files
           rm "$temp_file"
 
