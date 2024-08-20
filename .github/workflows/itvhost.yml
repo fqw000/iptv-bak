@@ -2,7 +2,7 @@ name: process iptvhost
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 每6小时运行一次
+    - cron: '0 */18 * * *'  # 每18小时运行一次
   workflow_dispatch:
 
 jobs:
