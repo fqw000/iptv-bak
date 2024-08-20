@@ -23,7 +23,8 @@ jobs:
           temp_file="tmp_file.m3u8"
 
           # 1. 使用 cat 命令去除空行写入临时文件
-          cat "$input_file" | sed '/^\s*$/d' > "$temp_file"
+          # cat "$input_file" | sed '/^\s*$/d' > "$temp_file"
+          cat "$input_file"  > "$temp_file"
 
           # 2. 将时间戳覆盖到 output 文件
           echo "# $(date)" > "$output_file"
