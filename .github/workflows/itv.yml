@@ -16,6 +16,13 @@ jobs:
       - name: Download itv.m3u content
         run: curl -L -o itv.m3u https://tv.wangqifei.eu.org/itv.m3u #弃用 https://s.wangqifei.eu.org/itv
 
+      - name: Check for #EXTM3U in itv.m3u
+        run: |
+          if ! grep -q '^#EXTM3U' itv.m3u; then
+            echo "File does not contain #EXTM3U, exiting..."
+            exit 1
+          fi
+
       - name: Process itv.m3u file
         run: |
           input_file="itv.m3u"
@@ -23,7 +30,6 @@ jobs:
           temp_file="tmp_file.m3u8"
 
           # 1. 使用 cat 命令去除空行写入临时文件
-          # cat "$input_file" | sed '/^\s*$/d' > "$temp_file"
           cat "$input_file"  > "$temp_file"
 
           # 2. 将时间戳覆盖到 output 文件
