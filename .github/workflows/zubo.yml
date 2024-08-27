@@ -27,8 +27,10 @@ jobs:
 
     - name: Update Results
       run: |
+        cd $GITHUB_WORKSPACE
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
+        git status
         git commit -m "Update results_fofa"
         git push
