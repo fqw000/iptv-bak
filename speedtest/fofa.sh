@@ -16,7 +16,6 @@ stream="rtp/225.1.4.73:1102"
 channel_key="河南联通"
 url_fofa=$(echo  '"udpxy" && country="CN" && region="Henan" && city="Zhengzhou" && protocol="http" && org="CHINA UNICOM China169 Backbone"' | base64 |tr -d '\n')
 url_fofa="https://fofa.info/result?qbase64="$url_fofa
-rtpfile="../rtp.m3u"
 
 # 使用城市名作为默认文件名，格式为 CityName.ip
 ipfile="ip/${city}.ip"
@@ -88,10 +87,6 @@ cat tmp1.txt > "txt/fofa_${city}.txt"
 
 rm -rf tmp1.txt # tmp2.txt tmp3.txt
 
-# 将ip更新到rtp.m3u
-sed -i "s|//.*/|//$ip1/|g" ${rtpfile} > rtp_new.m3u
-cat rtp_new.m3u > ${rtpfile}
-rm rtp_new.m3u
 
 #--------------------合并所有城市的txt文件为:   zubo_fofa.txt-----------------------------------------
 
