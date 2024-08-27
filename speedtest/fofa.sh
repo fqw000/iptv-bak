@@ -89,7 +89,7 @@ cat tmp1.txt > "txt/fofa_${city}.txt"
 rm -rf tmp1.txt # tmp2.txt tmp3.txt
 
 # 将ip更新到rtp.m3u
-sed -i "s|//.*/|//$ip1/|g" ${rtpfile}
+# sed -i "s|//.*/|//$ip1/|g" ${rtpfile}
 
 
 #--------------------合并所有城市的txt文件为:   zubo_fofa.txt-----------------------------------------
