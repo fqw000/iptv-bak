@@ -96,8 +96,8 @@ rm rtp_new.m3u
 #--------------------合并所有城市的txt文件为:   zubo_fofa.txt-----------------------------------------
 
 
-echo "河南联通,#genre#" >zubo_fofa.txt
-cat txt/fofa_${city}.txt >>zubo_fofa.txt
+echo "河南联通,#genre#" > zubo_fofa.txt
+cat txt/fofa_${city}.txt >> zubo_fofa.txt
 
 
 
