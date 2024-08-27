@@ -92,7 +92,7 @@ rm -rf tmp1.txt # tmp2.txt tmp3.txt
 
 
 echo "河南联通,#genre#" >zubo_fofa.txt
-cat txt/Henan_327.txt >>zubo_fofa.txt
+cat txt/${city}.txt >>zubo_fofa.txt
 
 
 
