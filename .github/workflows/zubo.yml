@@ -2,7 +2,7 @@ name: Daily Job
 
 on:
   schedule:
-    - cron: "0 20 * * *"
+    - cron: "0 12 * * *"
   workflow_dispatch:
 
 jobs:
@@ -16,19 +16,20 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y yt-dlp sed nmap
+      #sudo apt-get install -y yt-dlp sed nmap
       
     - name: Run Multitest Script
       #working-directory: iptv/speedtest
       run: |
         cd $GITHUB_WORKSPACE/speedtest
-        bash ./multi_test.sh
         bash ./fofa.sh
+      # bash ./multi_test.sh
+
     - name: Update Results
       run: |
         cd $GITHUB_WORKSPACE/speedtest
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
-        git commit -m "Update results"
+        git commit -m "Update results_fofa"
         git push
