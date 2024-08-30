@@ -1,59 +1,59 @@
 #EXTM3U
-#EXTINF:-1 group-title="广东",星空卫视
+#EXTINF:-1 tvg-name="星空卫视" group-title="广东",星空卫视
 http://120.84.121.223:808/hls/79/index.m3u8
-#EXTINF:-1 group-title="广东",凤凰香港
+#EXTINF:-1 tvg-name="凤凰香港" group-title="广东",凤凰香港
 http://120.84.121.223:808/hls/81/index.m3u8
-#EXTINF:-1 group-title="广东",凤凰中文
+#EXTINF:-1 tvg-name="凤凰中文" group-title="广东",凤凰中文
 http://120.84.121.223:808/hls/29/index.m3u8
-#EXTINF:-1 group-title="广东",凤凰资讯
+#EXTINF:-1 tvg-name="凤凰资讯" group-title="广东",凤凰资讯
 http://120.84.121.223:808/hls/28/index.m3u8
-#EXTINF:-1 group-title="广东",东森电影台
+#EXTINF:-1 tvg-name="东森电影台" group-title="广东",东森电影台
 http://120.84.121.223:808/hls/32/index.m3u8
-#EXTINF:-1 group-title="广东",东森洋片台
+#EXTINF:-1 tvg-name="东森洋片台" group-title="广东",东森洋片台
 http://120.84.121.223:808/hls/33/index.m3u8
-#EXTINF:-1 group-title="广东",龙祥电影
+#EXTINF:-1 tvg-name="龙祥电影" group-title="广东",龙祥电影
 http://120.84.121.223:808/hls/35/index.m3u8
-#EXTINF:-1 group-title="广东",TVB1本港台
+#EXTINF:-1 tvg-name="TVB1本港台" group-title="广东",TVB1本港台
 http://120.84.121.223:808/hls/86/index.m3u8
-#EXTINF:-1 group-title="广东",TVB2翡翠
+#EXTINF:-1 tvg-name="TVB2翡翠" group-title="广东",TVB2翡翠
 http://120.84.121.223:808/hls/25/index.m3u8
-#EXTINF:-1 group-title="广东",TVB3明珠
+#EXTINF:-1 tvg-name="TVB3明珠" group-title="广东",TVB3明珠
 http://120.84.121.223:808/hls/26/index.m3u8
-#EXTINF:-1 group-title="广东",大湾区卫视
+#EXTINF:-1 tvg-name="大湾区卫视" group-title="广东",大湾区卫视
 http://120.84.121.223:808/hls/119/index.m3u8
-#EXTINF:-1 group-title="广东",汕头综合
+#EXTINF:-1 tvg-name="汕头综合" group-title="广东",汕头综合
 http://120.84.121.223:808/hls/19/index.m3u8
-#EXTINF:-1 group-title="广东",潮州综合
+#EXTINF:-1 tvg-name="潮州综合" group-title="广东",潮州综合
 http://120.84.121.223:808/hls/20/index.m3u8
-#EXTINF:-1 group-title="广东",揭阳公共
+#EXTINF:-1 tvg-name="揭阳公共" group-title="广东",揭阳公共
 http://120.84.121.223:808/hls/18/index.m3u8
-#EXTINF:-1 group-title="广东",揭西高清
+#EXTINF:-1 tvg-name="揭西高清" group-title="广东",揭西高清
 http://120.84.121.223:808/hls/27/index.m3u8
-#EXTINF:-1 group-title="广东",经济科教高清
+#EXTINF:-1 tvg-name="经济科教高清" group-title="广东",经济科教高清
 http://120.84.121.223:808/hls/118/index.m3u8
-#EXTINF:-1 group-title="广东",天映电影
+#EXTINF:-1 tvg-name="天映电影" group-title="广东",天映电影
 http://120.84.121.223:808/hls/85/index.m3u8
-#EXTINF:-1 group-title="广东",广东卫视高清
+#EXTINF:-1 tvg-name="广东卫视高清" group-title="广东",广东卫视高清
 http://120.84.121.223:808/hls/121/index.m3u8
-#EXTINF:-1 group-title="广东",广东体育高清
+#EXTINF:-1 tvg-name="广东体育高清" group-title="广东",广东体育高清
 http://120.84.121.223:808/hls/22/index.m3u8
-#EXTINF:-1 group-title="广东",广东新闻
+#EXTINF:-1 tvg-name="广东新闻" group-title="广东",广东新闻
 http://120.84.121.223:808/hls/124/index.m3u8
-#EXTINF:-1 group-title="广东",广东影视
+#EXTINF:-1 tvg-name="广东影视" group-title="广东",广东影视
 http://120.84.121.223:808/hls/142/index.m3u8
-#EXTINF:-1 group-title="广东",广东珠江高清
+#EXTINF:-1 tvg-name="广东珠江高清" group-title="广东",广东珠江高清
 http://120.84.121.223:808/hls/122/index.m3u8
-#EXTINF:-1 group-title="广东",广东岭南戏曲
+#EXTINF:-1 tvg-name="广东岭南戏曲" group-title="广东",广东岭南戏曲
 http://120.84.121.223:808/hls/143/index.m3u8
-#EXTINF:-1 group-title="广东",广东少儿
+#EXTINF:-1 tvg-name="广东少儿" group-title="广东",广东少儿
 http://120.84.121.223:808/hls/120/index.m3u8
-#EXTINF:-1 group-title="广东",广东公共
+#EXTINF:-1 tvg-name="广东公共" group-title="广东",广东公共
 http://120.84.121.223:808/hls/148/index.m3u8
-#EXTINF:-1 group-title="广东",潮州戏剧
+#EXTINF:-1 tvg-name="潮州戏剧" group-title="广东",潮州戏剧
 http://120.84.121.223:808/hls/84/index.m3u8
-#EXTINF:-1 group-title="广东",金鹰卡通
+#EXTINF:-1 tvg-name="金鹰卡通" group-title="广东",金鹰卡通
 http://120.84.121.223:808/hls/123/index.m3u8
-#EXTINF:-1 group-title="广东",卡酷动漫
+#EXTINF:-1 tvg-name="卡酷动漫" group-title="广东",卡酷动漫
 http://120.84.121.223:808/hls/144/index.m3u8
-#EXTINF:-1 group-title="广东",嘉佳卡通
+#EXTINF:-1 tvg-name="嘉佳卡通" group-title="广东",嘉佳卡通
 http://120.84.121.223:808/hls/171/index.m3u8
