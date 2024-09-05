@@ -61,7 +61,7 @@ jobs:
           # 8. 整理 动画 频道
           # Step 1: Capture the lines with specified keywords and the next line, modify group-title, and append to a temporary file
           echo "" > temp.txt
-          sed -n '/少儿\|儿童\|动画\|动漫\|動畫\|動漫/{N;s/\(group-title="\)[^"]*/\1动画/;p;}' "$output_file" >> temp.txt
+          sed -n '/CCTV14\|少儿\|儿童\|动画\|动漫\|動畫\|動漫/{N;s/\(group-title="\)[^"]*/\1动画/;p;}' "$output_file" >> temp.txt
           # Step 2: Append the modified content to the end of "$output_file"
           cat temp.txt >> "$output_file"
           # Step 3: Clean up the temporary file
