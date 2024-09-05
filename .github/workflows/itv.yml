@@ -91,3 +91,4 @@ jobs:
         with:
           commit_message: "Update itv.m3u with timestamp"
           branch: main  # Commit to the main branch
+          commit_options: '--force'   # 强制推送
