@@ -58,7 +58,10 @@ jobs:
           # 7. 追加台湾频道
           sed '1d' "speedtest/template/taiwan.m3u" >> "$output_file"
 
-          # 8. 整理 动画 频道
+          # 8. 追加香港、增加动画
+          sed -n '/521-$/p' "speedtest/template/sichuan_telecom_333.m3u" >> "$output_file"
+
+          # 9. 整理 动画 频道
           # Step 1: Capture the lines with specified keywords and the next line, modify group-title, and append to a temporary file
           echo "" > temp.txt
           sed -n '/CCTV 14 HEVC\|少儿\|儿童\|动画\|动漫\|動畫\|動漫/{N;s/\(group-title="\)[^"]*/\1动画/;p;}' "$output_file" >> temp.txt
