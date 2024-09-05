@@ -59,7 +59,7 @@ jobs:
           sed '1d' "speedtest/template/taiwan.m3u" >> "$output_file"
 
           # 8. 追加香港、增加动画
-          sed -n '/521-$/p' "speedtest/template/sichuan_telecom_333.m3u" >> "$output_file"
+          sed -n '521,$p' "speedtest/template/sichuan_telecom_333.m3u" >> "$output_file"
 
           # 9. 整理 动画 频道
           # Step 1: Capture the lines with specified keywords and the next line, modify group-title, and append to a temporary file
@@ -91,4 +91,3 @@ jobs:
         with:
           commit_message: "Update itv.m3u with timestamp"
           branch: main  # Commit to the main branch
-          commit_options: '--force'   # 强制推送
